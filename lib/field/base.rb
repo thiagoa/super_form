@@ -1,35 +1,40 @@
 module Field
   class Base
     attr_accessor :name
-    attr_accessor :form
-    attr_accessor :value
-    attr_reader   :fieldset
+    attr_reader   :value
 
-    def initialize(name, fieldset)
-      @name     = name
-      @fieldset = fieldset
+    def self.factory(*args)
+      new(*args)
     end
 
-    def add_attributes(klass, options)
-      klass.attribute name, self.attribute
+    def initialize(name, options)
+      @name    = name
+      @options = options
     end
 
-    def add_validations(klass, options)
-      if options.any?
-        klass.send(:validates, name, options)
-      end
-    end
+    def setup_container(container)
+      @container = container
 
-    def form?
-      false
+      inject_attributes
+      inject_validations
     end
 
     def attribute
       String
     end
 
-    def output
-      value
+    private
+
+    def inject_attributes
+      @container.attribute @name, attribute
+    end
+
+    def inject_validations
+      if @options.any?
+        @container.send(:validates, @name, @options)
+      end
+    end
+  end
     end
   end
 end

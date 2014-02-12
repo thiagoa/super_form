@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'super_form'
-require 'active_model'
 
 module Field
   class Null < Base; end
@@ -8,91 +7,86 @@ end
 
 class DummyForm
   include SuperForm
+
+  fieldset :general do
+    field :name, Field::Text, presence: true
+  end
+
+  fieldset :toys do
+    field :ball, Field::Null
+    field :car,  Field::Text
+  end
+
+  field :email, Field::Text
+  field :phone, Field::Text, length: { minimum: 4 }
+
+  before_validation :validation_callback_call
+  after_validation :validation_callback_call
+
+  before_save :save_callback_call
+  after_save :save_callback_call
+
+  def validation_callback_call; end
+  def save_callback_call; end
+
+  def persist!; end
 end
 
 describe SuperForm do
-  before(:all) do
-    DummyForm.class_eval do
-      fieldset :general do
-        field :name, Field::Text, presence: true
-      end
+  let(:dummy_form) { DummyForm.new }
 
-      fieldset :toys do
-        field :ball, Field::Null
-        field :car,  Field::Text
-      end
-    end
-
-    @dummy_form = DummyForm.new
+  it 'creates virtus attributes' do
+    expect(dummy_form).to respond_to(:name)
+    expect(dummy_form).to respond_to(:name=)
+    expect(dummy_form).to respond_to(:ball)
+    expect(dummy_form).to respond_to(:ball=)
+    expect(dummy_form).to respond_to(:car)
+    expect(dummy_form).to respond_to(:car=)
   end
 
-  context 'when a field is defined at class level' do
-    before(:all) { @fields = DummyForm.fields }
-    
-    it 'stores the basic field objects at class level' do
-      expect(@fields.fetch(:name)).to be_instance_of Field::Text
-      expect(@fields.fetch(:ball)).to be_instance_of Field::Null
-      expect(@fields.fetch(:car)).to be_instance_of Field::Text
-    end
+  it 'defines fieldsets which contain field ids' do
+    general = dummy_form.fieldset(:general)
+    expect(general.fields).to eq Set.new([:name])
 
-    it 'assigns the fieldset to the field' do
-      expect(@fields.fetch(:name).fieldset).to eq :general
-      expect(@fields.fetch(:ball).fieldset).to eq :toys
-      expect(@fields.fetch(:car).fieldset).to eq :toys
-    end
+    toys = dummy_form.fieldset(:toys)
+    expect(toys.fields).to eq Set.new([:ball, :car])
   end
 
-  context 'when a form object is created' do
-    before(:each) { @dummy_form = DummyForm.new }
+  it 'assigns the form to the fieldsets' do
+    expect(dummy_form.fieldset(:general).form).to eq dummy_form
+    expect(dummy_form.fieldset(:toys).form).to eq dummy_form
+  end
 
-    # this can get better, but for now it's ok
-    it 'creates virtus attributes' do
-      expect(@dummy_form).to respond_to(:name)
-      expect(@dummy_form).to respond_to(:name=)
-      expect(@dummy_form).to respond_to(:ball)
-      expect(@dummy_form).to respond_to(:ball=)
-      expect(@dummy_form).to respond_to(:car)
-      expect(@dummy_form).to respond_to(:car=)
-    end
+  it 'uses the default fieldset when a field is defined outside a fieldset' do
+    expect(dummy_form.fieldset(:default).fields).to eq Set.new([:email, :phone])
+  end
 
-    it 'assigns the fieldset id to the field' do
-      expect(@dummy_form.field(:name).fieldset).to eq :general
-      expect(@dummy_form.field(:ball).fieldset).to eq :toys
-      expect(@dummy_form.field(:car).fieldset).to eq :toys
-    end
+  it 'is ready for validation' do
+    expect(dummy_form).to_not be_valid
+    expect(dummy_form.errors[:name]).to eq ["can't be blank"]
+    expect(dummy_form.errors[:phone]).to eq ["is too short (minimum is 4 characters)"]
+  end
 
-    it 'defines fieldsets containing the bundled fields' do
-      general = @dummy_form.fieldsets.fetch(:general)
+  it 'is never persisted' do
+    expect(dummy_form.persisted?).to be_false
+  end
 
-      expect(general.first).to be_instance_of Field::Text
-      expect(general.first.name).to eq :name
+  it 'triggers callbacks for validation' do
+    dummy_form.name = 'Dummy'
+    expect(dummy_form).to receive(:validation_callback_call).twice
+    dummy_form.valid?
+  end
 
-      toys = @dummy_form.fieldsets.fetch(:toys)
+  it 'triggers callbacks for save' do
+    dummy_form.name = 'Dummy'
+    expect(dummy_form).to receive(:save_callback_call).twice
+    dummy_form.save
+  end
 
-      expect(toys.first).to be_instance_of Field::Null
-      expect(toys.first.name).to eq :ball
-
-      expect(toys.last).to be_instance_of Field::Text
-      expect(toys.last.name).to eq :car
-    end
-
-    it 'fieldsets fields are the same instance of fields' do
-      @dummy_form.fieldsets.each do |id, fields|
-        fields.each do |field|
-          expect(field).to eq @dummy_form.field(field.name)
-        end
-      end
-    end
-
-    it 'is ready for validation' do
-      expect(@dummy_form).to_not be_valid
-      expect(@dummy_form.errors[:name]).to eq ["can't be blank"]
-    end
-
-    context 'when assigning a new attribute' do
-      it 'assigns the value of the attribute to the field' do
-        pending
-      end
-    end
+  it 'calls the persisted! method when saving a valid form' do
+    dummy_form.name  = 'Dummy'
+    dummy_form.phone = '12345'
+    expect(dummy_form).to receive(:persist!).once
+    dummy_form.save
   end
 end
