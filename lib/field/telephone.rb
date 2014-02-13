@@ -3,19 +3,14 @@ require 'telephone_validator'
 
 module Field
   class Telephone < Base
-    def add_validations(klass, options)
-      klass.validates name, telephone: true
+    def inject_validations(klass, options)
+      @container.validates name, telephone: true
 
       super
     end
 
     def attribute
       ::Attribute::Telephone
-    end
-
-    def output
-      return unless value
-      ::Telephone.new(value).formatted
     end
   end
 end

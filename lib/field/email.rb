@@ -2,9 +2,9 @@ require 'validates_email_format_of'
 
 module Field
   class Email < Base
-    def add_validations(klass, options)
-      klass.validates name, length: { maximum: 155 }
-      klass.validates name, email_format: { 
+    def inject_validations
+      @container.validates name, length: { maximum: 155 }
+      @container.validates name, email_format: { 
         message: I18n.t('activemodel.errors.messages.email'),
         allow_nil: true,
         allow_blank: true
@@ -22,7 +22,7 @@ module Field
           allow_blank:    true
         }
 
-        klass.validates name, uniqueness: options[:uniqueness].merge(required)
+        @container.validates name, uniqueness: options[:uniqueness].merge(required)
         options.reject! { |k| k == :uniqueness }
       end
 

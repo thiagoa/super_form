@@ -2,9 +2,9 @@ require 'cpf'
 require 'cpf_validator'
 
 module Field
-  class CPF < ::Field::Base
-    def add_validations(klass, options)
-      klass.validates name, cpf: true
+  class CPF < Base
+    def inject_validations
+      @container.validates name, cpf: true
 
       if options[:uniqueness]
         unless options[:uniqueness].is_a?(Hash) && options[:uniqueness][:model]
@@ -17,7 +17,9 @@ module Field
           allow_blank: true
         }
 
-        klass.validates name, uniqueness: options[:uniqueness].merge(required)
+        options[:uniqueness].merge!(required)
+        @container.validates name, uniqueness: options[:uniqueness]
+
         options.reject! { |k| k == :uniqueness }
       end
 
@@ -26,10 +28,6 @@ module Field
 
     def attribute
       ::Attribute::CPF
-    end
-
-    def output
-      ::CPF.new(value).formatted
     end
   end
 end

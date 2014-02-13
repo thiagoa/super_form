@@ -3,8 +3,8 @@ require 'cnpj_validator'
 
 module Field
   class CNPJ < Base
-    def add_validations(klass, options)
-      klass.validates name, cnpj: true
+    def inject_validations
+      @container.validates name, cnpj: true
 
       if options[:uniqueness]
         unless options[:uniqueness].is_a?(Hash) && options[:uniqueness][:model]
@@ -17,7 +17,9 @@ module Field
           allow_blank: true
         }
 
-        klass.validates name, uniqueness: options[:uniqueness].merge(required)
+        options[:uniqueness].merge!(required)
+        @container.validates name, uniqueness: options[:uniqueness]
+
         options.reject! { |k| k == :uniqueness }
       end
 
@@ -26,10 +28,6 @@ module Field
 
     def attribute
       ::Attribute::CNPJ
-    end
-
-    def output
-      ::CNPJ.new(value).formatted
     end
   end
 end

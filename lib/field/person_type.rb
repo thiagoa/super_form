@@ -5,9 +5,5 @@ module Field
     def attribute
       ::Attribute::PersonType
     end
-
-    def output
-      ::PersonType.new(value).description
-    end
   end
 end
