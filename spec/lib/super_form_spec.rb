@@ -1,107 +1,120 @@
 require 'spec_helper'
 require 'super_form'
-
-module Field
-  class Null < Base; end
-end
-
-class DummyForm
-  include SuperForm
-
-  fieldset :general do
-    field :name, Field::Text, presence: true
-  end
-
-  fieldset :toys do
-    field :ball, Field::Null
-    field :car,  Field::Text
-  end
-
-  field :email, Field::Text
-  field :phone, Field::Text, length: { minimum: 4 }
-
-  before_validation :validation_callback_call
-  after_validation :validation_callback_call
-
-  before_save :save_callback_call
-  after_save :save_callback_call
-
-  def validation_callback_call; end
-  def save_callback_call; end
-
-  def persist!; end
-end
-
-class EmptyForm
-  include SuperForm
-end
+require 'field/bare'
 
 describe SuperForm do
+  it 'is never persisted' do
+    expect(form_with_fields.persisted?).to be_false
+  end
+
   context 'when no fieldset is defined' do
-    it 'returns empty set of fieldsets' do
-      expect(EmptyForm.fieldsets).to eq({})
+    it 'returns no fieldsets' do
+      expect(form_with_no_fields.fieldsets).to eq({})
     end
   end
 
-  let(:dummy_form) { DummyForm.new }
+  context 'when fieldsets and fields are defined' do
+    let(:dummy) { form_with_fields }
 
-  it 'creates virtus attributes' do
-    expect(dummy_form).to respond_to(:name)
-    expect(dummy_form).to respond_to(:name=)
-    expect(dummy_form).to respond_to(:ball)
-    expect(dummy_form).to respond_to(:ball=)
-    expect(dummy_form).to respond_to(:car)
-    expect(dummy_form).to respond_to(:car=)
+    it 'creates virtus attributes' do
+      expect(dummy).to respond_to(:name)
+      expect(dummy).to respond_to(:name=)
+      expect(dummy).to respond_to(:ball)
+      expect(dummy).to respond_to(:ball=)
+      expect(dummy).to respond_to(:car)
+      expect(dummy).to respond_to(:car=)
+    end
+
+    it 'defines fieldsets which contain field ids' do
+      general = dummy.fieldset(:general)
+      expect(general.fields).to eq Set.new([:name])
+
+      toys = dummy.fieldset(:toys)
+      expect(toys.fields).to eq Set.new([:ball, :car])
+    end
+
+    it 'assigns the form object to the fieldset objects' do
+      expect(dummy.fieldset(:general).form).to eq dummy
+      expect(dummy.fieldset(:toys).form).to eq dummy
+    end
+
+    it 'uses :default fieldset for fields defined outside a fieldset' do
+      default_fieldset = dummy.fieldset(:default)
+      expect(default_fieldset.fields).to eq Set.new([:email, :phone])
+    end
+
+    it 'is ready for validation' do
+      expect(dummy).to_not be_valid
+      expect(dummy.errors[:name]).to eq ["can't be blank"]
+      expect(dummy.errors[:phone]).to eq ["is too short (minimum is 4 characters)"]
+    end
+
+    it 'calls persisted! when a valid form is saved' do
+      dummy.name  = 'Dummy'
+      dummy.phone = '12345'
+
+      expect(dummy).to receive(:persist!).once
+      dummy.save
+    end
   end
 
-  it 'defines fieldsets which contain field ids' do
-    general = dummy_form.fieldset(:general)
-    expect(general.fields).to eq Set.new([:name])
+  context 'when callbacks are defined' do
+    it 'triggers callbacks for save' do
+      dummy = form_with_fields do
+        before_save :callback_call
+        after_save :callback_call
+      end
 
-    toys = dummy_form.fieldset(:toys)
-    expect(toys.fields).to eq Set.new([:ball, :car])
+      dummy.name = 'Dummy'
+      dummy.phone = '12345'
+
+      expect(dummy).to receive(:callback_call).twice
+      dummy.save
+    end
+
+    it 'triggers callbacks for validation' do
+      dummy = form_with_fields do
+        before_validation :callback_call
+        after_validation :callback_call
+      end
+
+      dummy.name = 'Dummy'
+      dummy.phone = '12345'
+
+      expect(dummy).to receive(:callback_call).twice
+      dummy.valid?
+    end
   end
 
-  it 'assigns the form to the fieldsets' do
-    expect(dummy_form.fieldset(:general).form).to eq dummy_form
-    expect(dummy_form.fieldset(:toys).form).to eq dummy_form
+  def form_with_fields(&block)
+    Class.new do
+      include SuperForm
+
+      fieldset :general do
+        field :name, Field::Text, presence: true
+      end
+
+      fieldset :toys do
+        field :ball, Field::Bare
+        field :car,  Field::Text
+      end
+
+      field :email, Field::Text
+      field :phone, Field::Text, length: { minimum: 4 }
+
+      def self.model_name
+        ActiveModel::Name.new(self, nil, 'anonymous')
+      end
+
+      instance_eval(&block) if block_given?
+    end.new
   end
 
-  it 'uses the default fieldset when a field is defined outside a fieldset' do
-    expect(dummy_form.fieldset(:default).fields).to eq Set.new([:email, :phone])
-  end
-
-  it 'is ready for validation' do
-    expect(dummy_form).to_not be_valid
-    expect(dummy_form.errors[:name]).to eq ["can't be blank"]
-    expect(dummy_form.errors[:phone]).to eq ["is too short (minimum is 4 characters)"]
-  end
-
-  it 'is never persisted' do
-    expect(dummy_form.persisted?).to be_false
-  end
-
-  it 'triggers callbacks for validation' do
-    dummy_form.name = 'Dummy'
-    dummy_form.phone = '12345'
-
-    expect(dummy_form).to receive(:validation_callback_call).twice
-    dummy_form.valid?
-  end
-
-  it 'triggers callbacks for save' do
-    dummy_form.name = 'Dummy'
-    dummy_form.phone = '12345'
-
-    expect(dummy_form).to receive(:save_callback_call).twice
-    dummy_form.save
-  end
-
-  it 'calls the persisted! method when saving a valid form' do
-    dummy_form.name  = 'Dummy'
-    dummy_form.phone = '12345'
-
-    expect(dummy_form).to receive(:persist!).once
-    dummy_form.save
+  def form_with_no_fields
+    Class.new do
+      include SuperForm
+    end
   end
 end
+
+I18n.enforce_available_locales = false
