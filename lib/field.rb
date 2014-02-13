@@ -2,6 +2,7 @@ module Field
   autoload :Error,      'field/error'
   autoload :Base,       'field/base'
   autoload :Text,       'field/text'
+  autoload :Form,       'field/form'
   autoload :Password,   'field/password'
   autoload :Email,      'field/email'
   autoload :Float,      'field/float'

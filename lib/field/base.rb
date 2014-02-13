@@ -7,7 +7,7 @@ module Field
       new(*args)
     end
 
-    def initialize(name, options)
+    def initialize(name, options = {})
       @name    = name
       @options = options
     end
@@ -23,8 +23,6 @@ module Field
       String
     end
 
-    private
-
     def inject_attributes
       @container.attribute @name, attribute
     end
@@ -35,6 +33,23 @@ module Field
       end
     end
   end
+
+  class Proxy
+    def initialize(options, &setup)
+      @options = options
+      @setup   = setup
+    end
+
+    def factory(name, options = {})
+      @setup.call(name, options, self)
+    end
+
+    def method_missing(id, *args)
+      @options[id] || super
+    end
+
+    def respond_to_missing?(method_name, include_private = false)
+      @options.key? method_name
     end
   end
 end
