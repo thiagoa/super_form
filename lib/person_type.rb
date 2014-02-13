@@ -14,8 +14,8 @@ class PersonType
   end
 
   def self.descriptions
-    TYPES.each_with_object({}) do |type, hash| 
-      hash[type] = description(type) 
+    TYPES.each_with_object({}) do |type, hash|
+      hash[type] = description(type)
     end
   end
 
@@ -41,11 +41,5 @@ class PersonType
 
   def to_s
     value
-  end
-
-  class Attribute < Virtus::Attribute
-    def coerce(value)
-      ::PersonType.new(value).value
-    end
   end
 end
