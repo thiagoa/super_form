@@ -85,7 +85,9 @@ module SuperForm
   end
 
   module ClassMethods
-    attr_reader :fieldsets
+    def fieldsets
+      @fieldsets || {}
+    end
 
     def fieldset(id)
       open_fieldset(id)
@@ -108,7 +110,7 @@ module SuperForm
     private
 
     def current_fieldset
-      @fieldsets[@current] || open_fieldset(:default)
+      fieldsets[@current] || open_fieldset(:default)
     end
 
     def open_fieldset(id)

@@ -32,7 +32,17 @@ class DummyForm
   def persist!; end
 end
 
+class EmptyForm
+  include SuperForm
+end
+
 describe SuperForm do
+  context 'when no fieldset is defined' do
+    it 'returns empty set of fieldsets' do
+      expect(EmptyForm.fieldsets).to eq({})
+    end
+  end
+
   let(:dummy_form) { DummyForm.new }
 
   it 'creates virtus attributes' do
@@ -90,6 +100,7 @@ describe SuperForm do
   it 'calls the persisted! method when saving a valid form' do
     dummy_form.name  = 'Dummy'
     dummy_form.phone = '12345'
+
     expect(dummy_form).to receive(:persist!).once
     dummy_form.save
   end
