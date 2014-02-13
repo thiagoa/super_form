@@ -73,12 +73,16 @@ describe SuperForm do
 
   it 'triggers callbacks for validation' do
     dummy_form.name = 'Dummy'
+    dummy_form.phone = '12345'
+
     expect(dummy_form).to receive(:validation_callback_call).twice
     dummy_form.valid?
   end
 
   it 'triggers callbacks for save' do
     dummy_form.name = 'Dummy'
+    dummy_form.phone = '12345'
+
     expect(dummy_form).to receive(:save_callback_call).twice
     dummy_form.save
   end
