@@ -6,3 +6,5 @@ RSpec.configure do |config|
   config.filter_run :focus
   config.order = 'random'
 end
+
+I18n.enforce_available_locales = false if defined?(I18n)

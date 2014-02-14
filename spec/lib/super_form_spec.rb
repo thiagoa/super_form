@@ -1,6 +1,6 @@
-require 'spec_helper'
 require 'super_form'
 require 'field/bare'
+require 'spec_helper'
 
 describe SuperForm do
   it 'is never persisted' do
@@ -116,5 +116,3 @@ describe SuperForm do
     end
   end
 end
-
-I18n.enforce_available_locales = false

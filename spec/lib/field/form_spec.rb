@@ -1,5 +1,5 @@
-require 'spec_helper'
 require 'super_form'
+require 'spec_helper'
 
 describe Field::Form do
   context 'when creating a form field isolatedly' do
