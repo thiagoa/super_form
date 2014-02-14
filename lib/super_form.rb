@@ -73,6 +73,8 @@ module SuperForm
     end
   end
 
+  def persist!; end
+
   private
 
   def initialize_fieldsets
