@@ -1,13 +1,13 @@
 require 'field/form_proxy'
 
 module Field
-  class Form < Base
+  class FormArray < Base
     extend FormProxy
 
     attr_accessor :form_class
 
     def inject_attributes
-      @container.attribute @name, attribute, default: attribute.new
+      @container.attribute @name, attribute
     end
 
     def inject_validations
@@ -16,15 +16,17 @@ module Field
         validate method
 
         define_method method do
-          unless send('#{name}').send(:valid?)
-            errors.add(:base, "Invalid #{name.to_s}")
+          #{name}.each_with_index do |form, i|
+            unless form.send(:valid?)
+              errors.add(:base, "Invalid #{name.to_s} on row \#\{i + 1\}")
+            end
           end
         end
       }
     end
 
     def attribute
-      @form_class
+      Array[@form_class]
     end
   end
 end

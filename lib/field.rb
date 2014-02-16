@@ -3,6 +3,7 @@ module Field
   autoload :Base,       'field/base'
   autoload :Text,       'field/text'
   autoload :Form,       'field/form'
+  autoload :FormArray,  'field/form_array'
   autoload :Password,   'field/password'
   autoload :Email,      'field/email'
   autoload :Float,      'field/float'
