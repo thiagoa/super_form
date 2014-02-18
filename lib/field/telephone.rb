@@ -3,7 +3,7 @@ require 'telephone_validator'
 
 module Field
   class Telephone < Base
-    def inject_validations(klass, options)
+    def inject_validations
       @container.validates name, telephone: true
 
       super
