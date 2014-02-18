@@ -1,7 +1,8 @@
 module Field
   class Base
     attr_accessor :name
-    attr_reader   :value
+    attr_accessor :options
+    attr_accessor :form
 
     def self.factory(*args)
       new(*args)
@@ -31,6 +32,10 @@ module Field
       if @options.any?
         @container.send(:validates, @name, @options)
       end
+    end
+
+    def value
+      @form.send(name) if @form
     end
   end
 

@@ -14,7 +14,7 @@ describe SuperForm do
   end
 
   context 'when fieldsets and fields are defined' do
-    let(:dummy) { form_with_fields }
+    let!(:dummy) { form_with_fields }
 
     it 'creates virtus attributes' do
       expect(dummy).to respond_to(:name)
@@ -23,24 +23,52 @@ describe SuperForm do
       expect(dummy).to respond_to(:ball=)
       expect(dummy).to respond_to(:car)
       expect(dummy).to respond_to(:car=)
+      expect(dummy).to respond_to(:email)
+      expect(dummy).to respond_to(:email=)
+      expect(dummy).to respond_to(:phone)
+      expect(dummy).to respond_to(:phone=)
     end
 
-    it 'defines fieldsets which contain field ids' do
+    describe 'form instance fields' do
+      it 'has the right number of fields' do
+        expect(dummy.fields.length).to eq 5
+      end
+
+      it 'has field values which are the same as the form attributes' do
+        dummy.attributes = {
+          name:  'Thiago',
+          ball:  "Let's have it",
+          car:   "Let's drive it",
+          email: 'findme@athome.com',
+          phone: '12345'
+        }
+        expect(dummy.field(:name).value).to eq dummy.name
+        expect(dummy.field(:ball).value).to eq dummy.ball
+        expect(dummy.field(:car).value).to eq dummy.car
+        expect(dummy.field(:email).value).to eq dummy.email
+        expect(dummy.field(:phone).value).to eq dummy.phone
+      end
+    end
+
+    it 'defines fieldsets which contain form fields' do
       general = dummy.fieldset(:general)
-      expect(general.fields).to eq Set.new([:name])
+      expect(general.fields).to eq({
+        name: dummy.field(:name)
+      })
 
       toys = dummy.fieldset(:toys)
-      expect(toys.fields).to eq Set.new([:ball, :car])
-    end
-
-    it 'assigns the form object to the fieldset objects' do
-      expect(dummy.fieldset(:general).form).to eq dummy
-      expect(dummy.fieldset(:toys).form).to eq dummy
+      expect(toys.fields).to eq ({
+        ball: dummy.field(:ball),
+        car:  dummy.field(:car)
+      })
     end
 
     it 'uses :default fieldset for fields defined outside a fieldset' do
-      default_fieldset = dummy.fieldset(:default)
-      expect(default_fieldset.fields).to eq Set.new([:email, :phone])
+      default = dummy.fieldset(:default)
+      expect(default.fields).to eq ({
+        email: dummy.field(:email),
+        phone: dummy.field(:phone)
+      })
     end
 
     it 'is ready for validation' do

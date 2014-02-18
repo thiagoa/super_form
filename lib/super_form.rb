@@ -46,15 +46,34 @@ module SuperForm
   end
 
   def setup
-    initialize_fieldsets
-
     if self.class.setup
       instance_eval(&self.class.setup)
     end
   end
 
+  def fields
+    @fields ||= self.class.fields.each_with_object({}) do |field, f|
+      f[field.name] = field.dup
+      f[field.name].form = self
+    end
+  end
+
+  def field(name)
+    fields.fetch(name)
+  end
+
+  def fieldsets
+    @fieldsets ||= self.class.fieldsets.each_with_object({}) do |fieldset, f|
+      id, fields = fieldset
+
+      fields.each_with_object(f) do |field|
+        (f[id] ||= Fieldset.new(id)) << self.field(field)
+      end
+    end
+  end
+
   def fieldset(id)
-    @fieldsets.fetch(id)
+    fieldsets.fetch(id)
   end
 
   def persisted?
@@ -66,7 +85,6 @@ module SuperForm
       run_callbacks :save do
         persist!
       end
-
       true
     else
       false
@@ -77,20 +95,7 @@ module SuperForm
 
   private
 
-  def initialize_fieldsets
-    @fieldsets = {}
-
-    self.class.fieldsets.each do |id, fieldset|
-      @fieldsets[id] = fieldset.dup
-      @fieldsets[id].form = self
-    end
-  end
-
   module ClassMethods
-    def fieldsets
-      @fieldsets || {}
-    end
-
     def fieldset(id)
       open_fieldset(id)
       yield
@@ -101,7 +106,7 @@ module SuperForm
       field = field_class.factory(field_id, options)
       field.setup_container(self)
 
-      current_fieldset << field_id
+      add_field(field)
     end
 
     def setup(&block)
@@ -109,17 +114,28 @@ module SuperForm
       @setup
     end
 
+    def fieldsets
+      @fieldsets ||= {}
+    end
+
+    def fields
+      @fields ||= []
+    end
+
     private
+
+    def add_field(field)
+      fields << field
+      current_fieldset << field.name
+    end
 
     def current_fieldset
       fieldsets[@current] || open_fieldset(:default)
     end
 
     def open_fieldset(id)
-      @fieldsets ||= {}
       @current = id
-
-      @fieldsets[id] ||= Fieldset.new(id)
+      fieldsets[@current] ||= []
     end
 
     def close_fieldset
