@@ -19,10 +19,6 @@ describe Field::FormArray do
         include SuperForm
 
         field :name, Field::Text, presence: true
-
-        def self.model_name
-          ActiveModel::Name.new(self, nil, 'anonymous')
-        end
       end
 
       parent_form = Class.new { include SuperForm }

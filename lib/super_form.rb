@@ -122,6 +122,10 @@ module SuperForm
       @fields ||= []
     end
 
+    def model_name
+      ActiveModel::Name.new(self, nil, to_s.gsub(/Form$/, ''))
+    end
+
     private
 
     def add_field(field)

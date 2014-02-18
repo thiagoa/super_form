@@ -114,6 +114,14 @@ describe SuperForm do
     end
   end
 
+  it 'has an ActiveModel name without the form suffix' do
+    class InexistentForm
+      include SuperForm
+    end
+
+    expect(InexistentForm.model_name.name).to eq 'Inexistent'
+  end
+
   def form_with_fields(&block)
     Class.new do
       include SuperForm
@@ -129,10 +137,6 @@ describe SuperForm do
 
       field :email, Field::Text
       field :phone, Field::Text, length: { minimum: 4 }
-
-      def self.model_name
-        ActiveModel::Name.new(self, nil, 'anonymous')
-      end
 
       instance_eval(&block) if block_given?
     end.new
