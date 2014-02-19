@@ -8,7 +8,19 @@ module Presenter
   autoload :Password,   'presenter/password'
   autoload :PersonType, 'presenter/person_type'
 
+  module Name
+    def __name__
+      if name.nil?
+        raise 'You must define __name__ on a presenter anonymous class'
+      end
+
+      name.demodulize.underscore.gsub(/_presenter$/, '')
+    end
+  end
+
   class Base < SimpleDelegator
+    extend Name
+
     def self.map(params)
       params.each { |p| setup_attribute(p) }
     end
@@ -25,7 +37,8 @@ module Presenter
 
     def self.setup_attribute(params)
       attribute, presenter = params
-      method = "#{presenter}_presenter"
+      presenter_name = presenter.is_a?(Class) ? presenter.__name__ : presenter
+      method = "#{presenter_name}_presenter"
 
       def_presenter_accessor(presenter, method)
       def_attribute_reader(attribute, method)
@@ -48,13 +61,17 @@ module Presenter
       end
     end
 
-    def self.find_presenter(name)
-      base_class = name.to_s.capitalize.camelize
+    def self.find_presenter(presenter)
+      return presenter.new if presenter.is_a?(Class)
+
+      base_class = presenter.to_s.capitalize.camelize
       Object.const_get("Presenter::#{base_class}").new
     end
   end
 
   class Each
+    extend Name
+
     attr_accessor :value
 
     def initialize(value = nil)

@@ -1,8 +1,10 @@
-require 'pry'
 require 'presenter'
+require File.expand_path('../../support/presenter_name', __FILE__)
 
 module Presenter
   describe Base do
+    it_behaves_like 'presenter nameable'
+
     describe 'delegates to the source object' do
       it 'calls the source object correspondent methods' do
         source = stub_source_object([:name, :phone])
@@ -96,10 +98,27 @@ module Presenter
 
         expect(presenter.inexistent).to eq('12345')
       end
+
+      it 'works if given a presenter class instead of a symbol' do
+        each_presenter = Class.new(Each) do
+          def self.__name__
+            'fake'
+          end
+
+          def output
+            'it works'
+          end
+        end
+
+        presenter = stub_presenter(:fake) { map :fake => each_presenter }
+        expect(presenter.fake).to eq('it works')
+      end
     end
   end
 
   describe Each do
+    it_behaves_like 'presenter nameable'
+
     it 'can access the raw value' do
       presenter = Each.new('some value')
       expect(presenter.value).to eq('some value')
