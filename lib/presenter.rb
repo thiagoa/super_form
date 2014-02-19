@@ -2,6 +2,12 @@ require 'delegate'
 require 'active_support/inflector'
 
 module Presenter
+  autoload :CPF,        'presenter/cpf'
+  autoload :CNPJ,       'presenter/cnpj'
+  autoload :Telephone,  'presenter/telephone'
+  autoload :Password,   'presenter/password'
+  autoload :PersonType, 'presenter/person_type'
+
   class Base < SimpleDelegator
     def self.map(params)
       params.each { |p| setup_attribute(p) }
