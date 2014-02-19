@@ -104,8 +104,6 @@ module SuperForm
 
     def field(field_id, field_class, options = {})
       field = field_class.factory(field_id, options)
-      field.setup_container(self)
-
       add_field(field)
     end
 
@@ -129,6 +127,8 @@ module SuperForm
     private
 
     def add_field(field)
+      field.setup_container(self)
+
       fields << field
       current_fieldset << field.name
     end
