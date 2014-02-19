@@ -37,6 +37,10 @@ module Field
     def value
       @form.send(name) if @form
     end
+
+    def presenter_class
+      nil
+    end
   end
 
   class Proxy
