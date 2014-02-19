@@ -7,6 +7,7 @@ module Presenter
   autoload :Telephone,  'presenter/telephone'
   autoload :Password,   'presenter/password'
   autoload :PersonType, 'presenter/person_type'
+  autoload :Form,       'presenter/form'
 
   module Name
     def __name__
