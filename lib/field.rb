@@ -1,3 +1,6 @@
+require 'attribute'
+require 'super_form/fieldset'
+
 module Field
   autoload :Error,      'field/error'
   autoload :Base,       'field/base'
