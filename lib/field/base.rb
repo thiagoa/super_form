@@ -16,7 +16,10 @@ module Field
     def setup_container(container)
       @container = container
 
-      inject_attributes
+      if Helper.container_is_virtus?(container)
+        inject_attributes
+      end
+
       inject_validations
     end
 
@@ -40,6 +43,13 @@ module Field
 
     def presenter_class
       nil
+    end
+  end
+
+  module Helper
+    def self.container_is_virtus?(container)
+      defined?(Virtus::Model::Core) &&
+        container.ancestors.include?(Virtus::Model::Core)
     end
   end
 

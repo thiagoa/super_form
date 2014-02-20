@@ -1,5 +1,4 @@
 require 'active_support/concern'
-require 'active_model'
 require 'virtus'
 require 'super_form/fieldable'
 require "super_form/version"
@@ -8,8 +7,6 @@ autoload :UniquenessValidator, 'uniqueness_validator'
 
 module SuperForm
   extend ActiveSupport::Concern
-
-  include ActiveModel::Model
   include Fieldable
 
   included do
@@ -76,7 +73,9 @@ module SuperForm
     end
 
     def model_name
-      ActiveModel::Name.new(self, nil, to_s.gsub(/Form$/, ''))
+      if name = self.name || self.to_s
+        ActiveModel::Name.new(self, nil, name.gsub(/Form$/, ''))
+      end
     end
   end
 end

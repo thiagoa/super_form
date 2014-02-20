@@ -1,9 +1,11 @@
 require 'active_support/concern'
+require 'active_model'
 require 'field'
 
 module SuperForm
   module Fieldable
     extend ActiveSupport::Concern
+    include ActiveModel::Model
 
     def fields
       @fields ||= self.class.fields.each_with_object({}) do |field, f|
